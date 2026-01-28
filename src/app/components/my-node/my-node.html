@@ -1,0 +1,12 @@
+<div class="node-container" [ngStyle]="{ 'background-color': color }" (mousedown)="press($event)" (mouseup)="release($event)" #nodeRoot>
+  <header class="root-container">
+    <p>{{ treeNode().name }}</p>
+    <p>{{ treeNode().content }}</p>
+  </header>
+  <div class="children-container">
+    @for(child of treeNode().children; track $index) {
+      <app-my-node [treeNode]="child">
+      </app-my-node>
+    }
+  </div>
+</div>
