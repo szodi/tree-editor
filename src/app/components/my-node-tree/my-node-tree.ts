@@ -43,8 +43,6 @@ export class MyNodeTree implements OnInit {
     this.nodeComponents.set(comps);
   }
 
-
-
   selectNode(node: TreeNodeDto) {
     this.treeNodeStore.setSelectedNode(node);
   }
@@ -96,6 +94,7 @@ export class MyNodeTree implements OnInit {
     }
     this.draggingBox.set(null);
     this.nodeComponents().forEach(b => b.instance.isOverlapped = false);
+    this.setPositions(this.rootNode()!, [], 0);
   }
 
   private detectOverlaps() {
@@ -121,13 +120,15 @@ export class MyNodeTree implements OnInit {
     });
   }
 
-  // private setPositions(node: TreeNodeDto, level: number) {
-  //   const compRef = this.findComponentRef(node)!;
-  //   this.setComponentPosition(compRef, {
-  //     x: level * 50,
-  //     y: compRef.length * 100
-  //   });
-  // }
+  private setPositions(node: TreeNodeDto, relocated: number[], level: number) {
+    const compRef = this.findComponentRef(node)!;
+    this.setComponentPosition(compRef, {
+      x: level * 50,
+      y: relocated.length * 100
+    });
+    relocated.push(0);
+    node.children?.forEach(child => this.setPositions(child, relocated, level + 1));
+  }
 
   private createComponentRefList(node: TreeNodeDto, comps: ComponentRef<MyNode>[], level: number) {
     const comp = this.viewContainer.createComponent(MyNode);
