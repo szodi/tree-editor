@@ -1,22 +1,21 @@
-import {Component, ElementRef, input, viewChild} from '@angular/core';
+import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {TreeNodeDto} from '@ptc-api-models/treeNodeDto';
 import {NgClass} from '@angular/common';
 
 @Component({
   selector: 'app-my-node',
-  imports: [
-    NgClass
-  ],
+  imports: [NgClass],
   templateUrl: './my-node.html',
   styleUrl: './my-node.scss',
 })
 export class MyNode {
-  treeNode = input.required<TreeNodeDto>();
-  isOverlapped = input<boolean>(false);
 
-  card = viewChild<ElementRef>('card');
+  @Input() isOverlapped= false;
+  @Input() treeNode: TreeNodeDto | undefined;
 
-  getBounds() {
-    return this.card()?.nativeElement.getBoundingClientRect();
+  @Output() clicked = new EventEmitter<MouseEvent>();
+
+  onClick(event: MouseEvent) {
+    this.clicked.emit(event);
   }
 }

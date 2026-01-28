@@ -1,15 +1,8 @@
 <div class="main-container">
   <div class="tree-container">
-    @for (nodeWithPosition of nodeWithPositionList(); track $index) {
-      <app-my-node [treeNode]="nodeWithPosition.treeNode"
-                   [style.left.px]="nodeWithPosition.x"
-                   [style.top.px]="nodeWithPosition.y"
-                   [isOverlapped]="nodeWithPosition.isOverlapped"
-                   (mousedown)="startDrag($event, nodeWithPosition)">
-      </app-my-node>
-    }
+    <app-my-node-tree class="no-select"></app-my-node-tree>
   </div>
   <div class="content-container">
-    {{ selectedNode()?.content }}
+    {{ selectedNode()?.content ?? 'Select a node to see its content' }}
   </div>
 </div>
