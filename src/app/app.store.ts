@@ -2,12 +2,44 @@ import {patchState, signalStore, withMethods, withState} from '@ngrx/signals';
 import {TreeNodeDto} from '@ptc-api-models/treeNodeDto';
 
 type TreeNodeState = {
-  treeNode: TreeNodeDto | null;
+  rootNode: TreeNodeDto | null;
   selectedNode: TreeNodeDto | null;
 }
 
+// const initialState: TreeNodeState = {
+//   rootNode: {
+//     id: 1,
+//     name: 'root',
+//     content: 'Root node',
+//     children: []
+//   },
+//   selectedNode: null
+// }
+
+// const initialState: TreeNodeState = {
+//   rootNode: {
+//     id: 1,
+//     name: 'root',
+//     content: 'Root node',
+//     children: [{
+//       id: 2,
+//       name: 'child1',
+//       content: 'Child 1 node',
+//       parentId: 1,
+//       children: []
+//     }, {
+//       id: 3,
+//       name: 'child2',
+//       content: 'Child 2 node',
+//       parentId: 1,
+//       children: []
+//     }]
+//   },
+//   selectedNode: null
+// }
+
 const initialState: TreeNodeState = {
-  treeNode: {
+  rootNode: {
     id: 1,
     name: 'root',
     content: 'Root node',
@@ -56,8 +88,8 @@ export const TreeNodeStore = signalStore(
   { providedIn: 'root'},
   withState(initialState),
   withMethods(store => ({
-    setTreeNode(treeNode: TreeNodeDto) {
-      patchState(store, { treeNode })
+    setTreeNode(rootNode: TreeNodeDto) {
+      patchState(store, { rootNode })
     },
     setSelectedNode(treeNode: TreeNodeDto) {
       patchState(store, { selectedNode: treeNode })

@@ -1,15 +1,15 @@
-<div class="toolbar">
-  <button (click)="addBox()">Add Box</button>
+<div class="main-container">
+  <div class="tree-container">
+    @for (nodeWithPosition of nodeWithPositionList(); track $index) {
+      <app-my-node [treeNode]="nodeWithPosition.treeNode"
+                   [style.left.px]="nodeWithPosition.x"
+                   [style.top.px]="nodeWithPosition.y"
+                   [isOverlapped]="nodeWithPosition.isOverlapped"
+                   (mousedown)="startDrag($event, nodeWithPosition)">
+      </app-my-node>
+    }
+  </div>
+  <div class="content-container">
+    {{ selectedNode()?.content }}
+  </div>
 </div>
-
-<!--<app-my-node [treeNode]="treeNodeStore.treeNode()!"></app-my-node>-->
-
-@for (box of boxes; track $index) {
-  <app-box
-    #boxEl
-    [treeNode]="box.treeNode"
-    [style.left.px]="box.bounds.x"
-    [style.top.px]="box.bounds.y"
-    (mousedown)="startDrag($event, box)">
-  </app-box>
-}
