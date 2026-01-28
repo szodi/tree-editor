@@ -1,7 +1,8 @@
-import {Component, ComponentRef, computed, HostListener, inject, OnInit, signal, ViewContainerRef} from '@angular/core';
+import {Component, ComponentRef, computed, effect, HostListener, inject, signal, ViewContainerRef} from '@angular/core';
 import {TreeNodeStore} from '../../app.store';
 import {MyNode} from '../my-node/my-node';
 import {TreeNodeDto} from '@ptc-api-models/treeNodeDto';
+import {TreeNodeControllerService} from '@ptc-api-services/treeNodeController.service';
 
 interface Point {
   x: number;
@@ -14,8 +15,14 @@ interface Point {
   templateUrl: './my-node-tree.html',
   styleUrl: './my-node-tree.scss',
 })
-export class MyNodeTree implements OnInit {
+export class MyNodeTree {
+
+  private verticalGap = 50;
+  private horizontalGap = 50;
+
   treeNodeStore = inject(TreeNodeStore);
+
+  treeNodeService = inject(TreeNodeControllerService);
 
   rootNode = this.treeNodeStore.rootNode;
   selectedNode = this.treeNodeStore.selectedNode;
@@ -37,10 +44,24 @@ export class MyNodeTree implements OnInit {
   viewContainer = inject(ViewContainerRef);
   offsets: Point[] = [];
 
-  ngOnInit() {
+  constructor() {
+    effect(() => {
+      if (this.rootNode() && !this.nodeComponents().length) {
+        this.initComponents();
+      }
+    });
+    effect(() => {
+      if (this.selectedNode() && this.nodeComponents().length) {
+        this.nodeComponents().forEach(compRef => compRef.instance.isSelected = compRef.instance.treeNode?.id === this.selectedNode()!.id);
+      }
+    });
+  }
+
+  private initComponents() {
     let comps: ComponentRef<MyNode>[] = [];
-    this.createComponentRefList(this.rootNode() ?? {}, comps, 0);
+    this.createComponentRefList(this.rootNode() ?? {}, comps);
     this.nodeComponents.set(comps);
+    this.setPositions(this.rootNode()!, [], 0);
   }
 
   selectNode(node: TreeNodeDto) {
@@ -49,6 +70,7 @@ export class MyNodeTree implements OnInit {
 
   startDrag(event: MouseEvent, box: ComponentRef<MyNode>) {
     this.selectNode(box.instance.treeNode!);
+    if (box.instance.treeNode === this.rootNode()) return;
     this.draggingBox.set(box);
     this.draggingBox()!.location.nativeElement.style.zIndex = '1000';
     this.draggingBox()!.location.nativeElement.classList.add('no-select');
@@ -92,9 +114,13 @@ export class MyNodeTree implements OnInit {
       this.draggingBox()!.location.nativeElement.classList.remove('no-select');
       this.subtree().forEach(node => node.location.nativeElement.style.zIndex = '1');
     }
-    this.draggingBox.set(null);
+    const targetNode = this.nodeComponents().find(compRef => compRef.instance.isOverlapped)?.instance;
     this.nodeComponents().forEach(b => b.instance.isOverlapped = false);
+    if (targetNode) {
+      this.treeNodeService.relocateTreeNode(this.draggingBox()?.instance.treeNode!.id!, targetNode.treeNode!.id!).subscribe(node => this.treeNodeStore.setTreeNode(node));
+    }
     this.setPositions(this.rootNode()!, [], 0);
+    this.draggingBox.set(null);
   }
 
   private detectOverlaps() {
@@ -123,24 +149,20 @@ export class MyNodeTree implements OnInit {
   private setPositions(node: TreeNodeDto, relocated: number[], level: number) {
     const compRef = this.findComponentRef(node)!;
     this.setComponentPosition(compRef, {
-      x: level * 50,
-      y: relocated.length * 100
+      x: level * this.horizontalGap,
+      y: relocated.length * this.verticalGap
     });
     relocated.push(0);
     node.children?.forEach(child => this.setPositions(child, relocated, level + 1));
   }
 
-  private createComponentRefList(node: TreeNodeDto, comps: ComponentRef<MyNode>[], level: number) {
+  private createComponentRefList(node: TreeNodeDto, comps: ComponentRef<MyNode>[]) {
     const comp = this.viewContainer.createComponent(MyNode);
     comp.instance.isOverlapped = false;
     comp.instance.treeNode = node;
     comp.instance.clicked.subscribe(e => this.startDrag(e, comp));
-    this.setComponentPosition(comp, {
-      x: level * 50,
-      y: comps.length * 100
-    });
     comps.push(comp);
-    node.children?.forEach(child => this.createComponentRefList(child, comps, level + 1));
+    node.children?.forEach(child => this.createComponentRefList(child, comps));
   }
 
   private setComponentPosition(compRef: ComponentRef<MyNode>, position: Point) {
